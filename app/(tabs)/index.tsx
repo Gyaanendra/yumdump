@@ -20,6 +20,15 @@ const restaurants = [
     rating: 5.0,
     image: require('@/assets/images/pizza.png'),
   },
+  {
+    id: '2',
+    name: 'ABC Pizzeria',
+    address: '123 Market, India',
+    phone: '08123456789',
+    rating: 5.0,
+    image: require('@/assets/images/pizza.png'),
+  },
+  
   // You can add more restaurants here
 ];
 
