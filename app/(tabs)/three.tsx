@@ -2,12 +2,12 @@ import { StyleSheet } from 'react-native';
 import { Text, View } from 'react-native';
 import EditScreenInfo from '@/components/EditScreenInfo';
 
-export default function TabTwoScreen() {
+export default function TabThreeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Map</Text>
+      <Text style={styles.title}>Profile</Text>
       <View style={styles.separator} />
-      <EditScreenInfo path="app/(tabs)/two.tsx" />
+      <EditScreenInfo path="app/(tabs)/three.tsx" />
     </View>
   );
 }
