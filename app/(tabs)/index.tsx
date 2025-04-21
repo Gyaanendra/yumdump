@@ -1,43 +1,29 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, Image, TextInput, TouchableOpacity, FlatList, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, ScrollView, Image, TextInput, TouchableOpacity, FlatList, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { router } from 'expo-router';
 import { useUser } from '@clerk/clerk-expo';
+import { fetchRestaurants } from '@/services/restaurantService';
+import { Restaurant } from '@/types/restaurant';
 
 const categories = [
   { id: '1', name: 'Italian' },
   { id: '2', name: 'Western' },
   { id: '3', name: 'Japanese' },
   { id: '4', name: 'Indian' },
-];
-
-const restaurants = [
-  {
-    id: '1',
-    name: 'ABC Pizzeria',
-    address: '123 Market, India',
-    phone: '08123456789',
-    rating: 5.0,
-    image: require('@/assets/images/pizza.png'),
-  },
-  {
-    id: '2',
-    name: 'ABC Pizzeria',
-    address: '123 Market, India',
-    phone: '08123456789',
-    rating: 5.0,
-    image: require('@/assets/images/pizza.png'),
-  },
-  
-  // You can add more restaurants here
+  { id: '5', name: 'Thai' },
+  { id: '6', name: 'Mediterranean' },
 ];
 
 export default function TabOneScreen() {
   const colorScheme = useColorScheme();
   const { user } = useUser();
   const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Sample notifications data
   const notifications = [
@@ -67,25 +53,54 @@ export default function TabOneScreen() {
     }
   ];
 
+  useEffect(() => {
+    async function loadRestaurants() {
+      try {
+        setLoading(true);
+        const data = await fetchRestaurants();
+        setRestaurants(data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load restaurants');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadRestaurants();
+  }, []);
+
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity style={styles.categoryButton}>
       <Text style={styles.categoryText}>{item.name}</Text>
     </TouchableOpacity>
   );
 
-  const renderRestaurantItem = ({ item }) => (
-    <View style={styles.restaurantCard}>
-      <Image source={item.image} style={styles.restaurantImage} />
+  const renderRestaurantItem = ({ item }: { item: Restaurant }) => (
+    <TouchableOpacity 
+      style={styles.restaurantCard}
+      onPress={() => router.push(`/restaurant/${item.restaurant_id}`)}
+    >
+      <Image 
+        source={{ uri: item.thumbnail.replace(/\s|`/g, '') }} 
+        style={styles.restaurantImage} 
+        defaultSource={require('@/assets/images/pizza.png')}
+      />
       <View style={styles.restaurantInfo}>
         <Text style={styles.restaurantName}>{item.name}</Text>
-        <Text style={styles.restaurantAddress}>{item.address}</Text>
-        <Text style={styles.restaurantPhone}>{item.phone}</Text>
+        <Text style={styles.restaurantAddress}>{item.location}</Text>
+        <Text style={styles.restaurantPhone}>{item.phone_number}</Text>
       </View>
       <View style={styles.ratingContainer}>
         <Ionicons name="star" size={16} color="#F9A11B" />
-        <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+        <Text style={styles.ratingText}>
+          {item.user_reviews.length > 0 
+            ? (item.user_reviews.reduce((acc, review) => acc + review.stars, 0) / item.user_reviews.length).toFixed(1)
+            : 'N/A'}
+        </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderNotificationItem = ({ item }) => (
@@ -133,13 +148,31 @@ export default function TabOneScreen() {
         contentContainerStyle={styles.categoriesContentContainer}
       />
 
-      <FlatList
-        data={restaurants}
-        renderItem={renderRestaurantItem}
-        keyExtractor={item => item.id}
-        showsVerticalScrollIndicator={false}
-        style={styles.restaurantsList}
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#F9A11B" />
+          <Text style={styles.loadingText}>Loading restaurants...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color="#F9A11B" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => fetchRestaurants().then(setRestaurants)}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={restaurants}
+          renderItem={renderRestaurantItem}
+          keyExtractor={item => item.restaurant_id.toString()}
+          showsVerticalScrollIndicator={false}
+          style={styles.restaurantsList}
+        />
+      )}
 
       {/* Notification Modal */}
       <Modal

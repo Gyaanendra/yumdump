@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Dimensions, Modal, Image, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Dimensions, Modal, Image, ScrollView, ActivityIndicator } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Callout } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { API_BASE_URL, API_ENDPOINTS } from '@/config/env';
 
 export default function TabTwoScreen() {
   // Delhi coordinates (centered around Connaught Place)
@@ -15,75 +17,10 @@ export default function TabTwoScreen() {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [restaurants, setRestaurants] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
-
-  // Enhanced restaurant data
-  const restaurants = [
-    {
-      id: '1',
-      coordinate: { latitude: 28.6304, longitude: 77.2177 },
-      title: 'ABC Pizzeria',
-      address: '123 Market, Delhi',
-      phone: '08123456789',
-      rating: 4.8,
-      image: require('@/assets/images/pizza.png'),
-      color: '#F9A11B',
-      description: 'Authentic Italian pizzas made with fresh ingredients and traditional recipes.',
-      menu: [
-        { name: 'Margherita Pizza', price: '₹299' },
-        { name: 'Pepperoni Pizza', price: '₹399' },
-        { name: 'Garlic Bread', price: '₹149' }
-      ]
-    },
-    {
-      id: '2',
-      coordinate: { latitude: 28.6324, longitude: 77.2197 },
-      title: 'Delhi Spice',
-      address: '45 Connaught Place, Delhi',
-      phone: '09876543210',
-      rating: 4.5,
-      image: require('@/assets/images/pizza.png'),
-      color: '#F9A11B',
-      description: 'Authentic North Indian cuisine with a modern twist.',
-      menu: [
-        { name: 'Butter Chicken', price: '₹350' },
-        { name: 'Paneer Tikka', price: '₹299' },
-        { name: 'Naan', price: '₹50' }
-      ]
-    },
-    {
-      id: '3',
-      coordinate: { latitude: 28.6284, longitude: 77.2157 },
-      title: 'Sushi House',
-      address: '78 Rajpath, Delhi',
-      phone: '07654321098',
-      rating: 4.7,
-      image: require('@/assets/images/pizza.png'),
-      color: '#F9A11B',
-      description: 'Fresh and authentic Japanese cuisine in the heart of Delhi.',
-      menu: [
-        { name: 'Salmon Sushi', price: '₹499' },
-        { name: 'Miso Soup', price: '₹199' },
-        { name: 'Tempura', price: '₹349' }
-      ]
-    },
-    {
-      id: '4',
-      coordinate: { latitude: 28.6314, longitude: 77.2137 },
-      title: 'Cafe Italiano',
-      address: '22 Janpath, Delhi',
-      phone: '09988776655',
-      rating: 4.3,
-      image: require('@/assets/images/pizza.png'),
-      color: '#F9A11B',
-      description: 'Cozy Italian cafe serving pasta, coffee, and desserts.',
-      menu: [
-        { name: 'Pasta Alfredo', price: '₹349' },
-        { name: 'Tiramisu', price: '₹249' },
-        { name: 'Cappuccino', price: '₹149' }
-      ]
-    },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Categories for filter
   const categories = [
@@ -93,9 +30,60 @@ export default function TabTwoScreen() {
     { id: '4', name: 'Indian' },
   ];
 
+  // Fetch restaurants data
+  useEffect(() => {
+    async function fetchRestaurants() {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.restaurants}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch restaurants');
+        }
+        const data = await response.json();
+        
+        // Transform API data to match our map requirements
+        const transformedData = data.map(restaurant => ({
+          id: restaurant.restaurant_id.toString(),
+          coordinate: {
+            // For demo purposes, adding slight randomization to coordinates
+            latitude: 28.6304 + (Math.random() - 0.5) * 0.01,
+            longitude: 77.2177 + (Math.random() - 0.5) * 0.01
+          },
+          title: restaurant.name,
+          address: restaurant.location,
+          phone: restaurant.phone_number,
+          rating: restaurant.total_reviews > 0 ? 4.5 : 4.0, // Placeholder rating
+          image: { uri: restaurant.thumbnail.replace(/\s|`/g, '') },
+          color: '#F9A11B',
+          description: restaurant.description,
+          menu: restaurant.order?.menu_items?.map(item => ({
+            name: item.name,
+            price: `₹${item.price}`
+          })) || []
+        }));
+        
+        setRestaurants(transformedData);
+        setFilteredRestaurants(transformedData);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load restaurants');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchRestaurants();
+  }, []);
+
   const handleMarkerPress = (restaurant) => {
     setSelectedRestaurant(restaurant);
     setDetailVisible(true);
+  };
+
+  const handleViewDetailPress = (restaurantId) => {
+    setDetailVisible(false);
+    router.push(`/restaurant/${restaurantId}`);
   };
 
   const renderRestaurantDetail = () => {
@@ -139,7 +127,7 @@ export default function TabTwoScreen() {
             <View style={styles.buttonContainer}>
               <TouchableOpacity 
                 style={styles.viewDetailButton}
-                onPress={() => setDetailVisible(false)}
+                onPress={() => handleViewDetailPress(selectedRestaurant.id)}
               >
                 <Text style={styles.viewDetailText}>View Detail</Text>
               </TouchableOpacity>
@@ -170,12 +158,31 @@ export default function TabTwoScreen() {
       );
       setFilteredRestaurants(filtered);
     }
-  }, [searchQuery]);
+  }, [searchQuery, restaurants]);
 
-  // Initialize filtered restaurants with all restaurants
-  useEffect(() => {
-    setFilteredRestaurants(restaurants);
-  }, []);
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#F9A11B" />
+        <Text style={styles.loadingText}>Loading restaurants...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle-outline" size={48} color="#F9A11B" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => fetchRestaurants()}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

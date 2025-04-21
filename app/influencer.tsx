@@ -1,119 +1,110 @@
-import React from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, TextInput, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { router } from 'expo-router';
-import { useUser } from '@clerk/clerk-expo';
+import { useUser } from '@clerk/clerk-expo'; // Import useUser
 
 export default function InfluencerScreen() {
-  const { user } = useUser();
-  const userName = user?.fullName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User';
+  const [isEnabled, setIsEnabled] = useState(false);
+  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+  
+  const [bio, setBio] = useState('');
+  const { user } = useUser(); // Get user data from Clerk
+  const userName = user?.fullName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User'; // Get user name or fallback
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Influencer Profile</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>Become an Influencer</Text>
       </View>
-
-      <ScrollView style={styles.content}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <Image 
-              source={require('@/assets/images/logo.png')} 
-              style={styles.avatar}
-            />
-          </View>
-          
-          <Text style={styles.userName}>{userName}</Text>
-          <Text style={styles.userType}>Food Influencer</Text>
-          
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>124</Text>
-              <Text style={styles.statLabel}>Posts</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>23.4k</Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>348</Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </View>
-          </View>
+      
+      <View style={styles.profileSection}>
+        <View style={styles.avatarContainer}>
+          <Image 
+            source={require('@/assets/images/logo.png')} 
+            style={styles.avatar}
+          />
         </View>
         
-        <View style={styles.divider} />
+        <Text style={styles.userName}>{userName}</Text> {/* Use the dynamic userName */}
+        <Text style={styles.userType}>Normal User</Text>
+      </View>
+      
+      <View style={styles.infoContainer}>
+        <Text style={styles.sectionTitle}>Influencer Program</Text>
+        <Text style={styles.description}>
+          Join our influencer program to share your food experiences and earn rewards. 
+          As an influencer, you can post reviews, share photos, and help others discover 
+          great food places.
+        </Text>
         
-        <View style={styles.bioSection}>
-          <Text style={styles.bioTitle}>About Me</Text>
-          <Text style={styles.bioText}>
-            Food enthusiast and culinary explorer. I love discovering new restaurants and sharing my experiences with my followers. Join me on my food journey!
-          </Text>
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>Enable Influencer Mode</Text>
+          <Switch
+            trackColor={{ false: "#767577", true: "#F9A11B" }}
+            thumbColor={isEnabled ? "#fff" : "#f4f3f4"}
+            ios_backgroundColor="#3e3e3e"
+            onValueChange={toggleSwitch}
+            value={isEnabled}
+          />
         </View>
         
-        <View style={styles.divider} />
-        
-        <View style={styles.contentSection}>
-          <Text style={styles.sectionTitle}>Recent Reviews</Text>
-          
-          <View style={styles.reviewCard}>
-            <Image 
-              source={require('@/assets/images/pizza.png')} 
-              style={styles.reviewImage}
+        {isEnabled && (
+          <View style={styles.influencerForm}>
+            <Text style={styles.formLabel}>Tell us about yourself</Text>
+            <TextInput
+              style={styles.bioInput}
+              placeholder="Write a short bio about your food preferences and experiences..."
+              multiline={true}
+              numberOfLines={4}
+              value={bio}
+              onChangeText={setBio}
             />
-            <View style={styles.reviewContent}>
-              <Text style={styles.reviewTitle}>ABC Pizzeria</Text>
-              <View style={styles.ratingContainer}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Ionicons 
-                    key={star} 
-                    name="star" 
-                    size={16} 
-                    color={star <= 4 ? "#F9A11B" : "#ddd"} 
-                    style={{ marginRight: 2 }}
-                  />
-                ))}
-                <Text style={styles.ratingText}>4.0</Text>
-              </View>
-              <Text style={styles.reviewText}>
-                The pizza was amazing! Perfectly crispy crust and generous toppings.
-              </Text>
-              <Text style={styles.reviewDate}>2 days ago</Text>
+            
+            <Text style={styles.formLabel}>Social Media Links (Optional)</Text>
+            <View style={styles.socialInput}>
+              <FontAwesome5 name="instagram" size={20} color="#C13584" style={styles.socialIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Your Instagram username"
+              />
             </View>
+            
+            <View style={styles.socialInput}>
+              <FontAwesome5 name="twitter" size={20} color="#1DA1F2" style={styles.socialIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Your Twitter username"
+              />
+            </View>
+            
+            <TouchableOpacity style={styles.submitButton}>
+              <Text style={styles.submitButtonText}>Submit Application</Text>
+            </TouchableOpacity>
           </View>
-          
-          <View style={styles.reviewCard}>
-            <Image 
-              source={require('@/assets/images/pizza.png')} 
-              style={styles.reviewImage}
-            />
-            <View style={styles.reviewContent}>
-              <Text style={styles.reviewTitle}>Sushi House</Text>
-              <View style={styles.ratingContainer}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Ionicons 
-                    key={star} 
-                    name="star" 
-                    size={16} 
-                    color={star <= 5 ? "#F9A11B" : "#ddd"} 
-                    style={{ marginRight: 2 }}
-                  />
-                ))}
-                <Text style={styles.ratingText}>5.0</Text>
-              </View>
-              <Text style={styles.reviewText}>
-                Fresh and delicious sushi. The service was excellent too!
-              </Text>
-              <Text style={styles.reviewDate}>1 week ago</Text>
-            </View>
+        )}
+        
+        <View style={styles.benefitsContainer}>
+          <Text style={styles.benefitsTitle}>Benefits</Text>
+          <View style={styles.benefitItem}>
+            <Ionicons name="star" size={20} color="#F9A11B" style={styles.benefitIcon} />
+            <Text style={styles.benefitText}>Earn rewards for popular reviews</Text>
+          </View>
+          <View style={styles.benefitItem}>
+            <Ionicons name="restaurant" size={20} color="#F9A11B" style={styles.benefitIcon} />
+            <Text style={styles.benefitText}>Get invited to exclusive food events</Text>
+          </View>
+          <View style={styles.benefitItem}>
+            <Ionicons name="gift" size={20} color="#F9A11B" style={styles.benefitIcon} />
+            <Text style={styles.benefitText}>Receive special offers from restaurants</Text>
           </View>
         </View>
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -125,27 +116,22 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 50,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    paddingBottom: 20,
   },
   backButton: {
-    padding: 5,
+    marginRight: 15,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
   },
-  content: {
-    flex: 1,
-  },
   profileSection: {
     alignItems: 'center',
-    paddingVertical: 20,
+    marginBottom: 20,
+    paddingHorizontal: 20,
   },
   avatarContainer: {
     width: 100,
@@ -162,107 +148,118 @@ const styles = StyleSheet.create({
     tintColor: 'white',
   },
   userName: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 5,
   },
   userType: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#F9A11B',
+  },
+  infoContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
     marginBottom: 15,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '80%',
-    marginTop: 10,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
-  },
-  divider: {
-    height: 8,
-    backgroundColor: '#f8f8f8',
-  },
-  bioSection: {
-    padding: 20,
-  },
-  bioTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
-  bioText: {
+  description: {
     fontSize: 16,
     color: '#666',
     lineHeight: 24,
+    marginBottom: 20,
   },
-  contentSection: {
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 10,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  influencerForm: {
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  formLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 10,
+  },
+  bioInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 16,
+    textAlignVertical: 'top',
+    minHeight: 100,
+    marginBottom: 20,
+  },
+  socialInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+  },
+  socialIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+  },
+  submitButton: {
+    backgroundColor: '#F9A11B',
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  benefitsContainer: {
+    marginTop: 20,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 10,
     padding: 20,
   },
-  sectionTitle: {
+  benefitsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 15,
   },
-  reviewCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 15,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  reviewImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 15,
-  },
-  reviewContent: {
-    flex: 1,
-  },
-  reviewTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  ratingContainer: {
+  benefitItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  ratingText: {
-    marginLeft: 5,
-    fontSize: 14,
-    color: '#666',
+  benefitIcon: {
+    marginRight: 10,
   },
-  reviewText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  reviewDate: {
-    fontSize: 12,
-    color: '#999',
+  benefitText: {
+    fontSize: 16,
+    color: '#555',
   },
 });
