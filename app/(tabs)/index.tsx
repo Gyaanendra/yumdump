@@ -1,8 +1,10 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Image, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, ScrollView, Image, TextInput, TouchableOpacity, FlatList, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { router } from 'expo-router';
+import { useUser } from '@clerk/clerk-expo';
 
 const categories = [
   { id: '1', name: 'Italian' },
@@ -34,6 +36,36 @@ const restaurants = [
 
 export default function TabOneScreen() {
   const colorScheme = useColorScheme();
+  const { user } = useUser();
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+  
+  // Sample notifications data
+  const notifications = [
+    {
+      id: '1',
+      type: 'review',
+      icon: 'chatbubble-ellipses-outline',
+      iconColor: '#F9A11B',
+      message: 'You got 10 new review reply',
+      time: '2h ago'
+    },
+    {
+      id: '2',
+      type: 'video',
+      icon: 'play',
+      iconColor: '#3498db',
+      message: 'Your video submission is approved!',
+      time: '5h ago'
+    },
+    {
+      id: '3',
+      type: 'recommendation',
+      icon: 'restaurant-outline',
+      iconColor: '#F9A11B',
+      message: 'Try something new! We have curated the...',
+      time: '1d ago'
+    }
+  ];
 
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity style={styles.categoryButton}>
@@ -56,14 +88,26 @@ export default function TabOneScreen() {
     </View>
   );
 
+  const renderNotificationItem = ({ item }) => (
+    <TouchableOpacity style={styles.notificationItem}>
+      <View style={[styles.notificationIconContainer, { backgroundColor: item.iconColor + '20' }]}>
+        <Ionicons name={item.icon} size={24} color={item.iconColor} />
+      </View>
+      <View style={styles.notificationContent}>
+        <Text style={styles.notificationMessage}>{item.message}</Text>
+        <Text style={styles.notificationTime}>{item.time}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <Ionicons name="restaurant-outline" size={24} color="#F9A11B" />
-          <Text style={styles.logoText}>Hello! Garvita</Text>
+          <Text style={styles.logoText}>Hello! {user?.firstName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User'}</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setNotificationModalVisible(true)}>
           <Ionicons name="notifications-outline" size={24} color="#F9A11B" />
         </TouchableOpacity>
       </View>
@@ -86,6 +130,7 @@ export default function TabOneScreen() {
         keyExtractor={item => item.id}
         showsHorizontalScrollIndicator={false}
         style={styles.categoriesList}
+        contentContainerStyle={styles.categoriesContentContainer}
       />
 
       <FlatList
@@ -96,7 +141,30 @@ export default function TabOneScreen() {
         style={styles.restaurantsList}
       />
 
-      {/* Bottom tab bar removed */}
+      {/* Notification Modal */}
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={notificationModalVisible}
+        onRequestClose={() => setNotificationModalVisible(false)}
+      >
+        <View style={styles.notificationContainer}>
+          <View style={styles.notificationHeader}>
+            <TouchableOpacity onPress={() => setNotificationModalVisible(false)}>
+              <Ionicons name="arrow-back" size={24} color="#F9A11B" />
+            </TouchableOpacity>
+            <Text style={styles.notificationTitle}>Notification</Text>
+            <View style={{ width: 24 }} />
+          </View>
+          
+          <FlatList
+            data={notifications}
+            renderItem={renderNotificationItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.notificationList}
+          />
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -113,6 +181,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
+    marginBottom: 5,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -151,16 +220,29 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     marginBottom: 15,
   },
+  categoriesContentContainer: {
+    paddingRight: 15,
+  },
   categoryButton: {
     backgroundColor: '#F9A11B',
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginHorizontal: 5,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginHorizontal: 8,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 50,
+    marginVertical: 5,
+    overflow: 'visible',
   },
   categoryText: {
     color: 'white',
-    fontWeight: '500',
+    fontWeight: '600',
+    fontSize: 16,
+    textAlign: 'center',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   restaurantsList: {
     paddingHorizontal: 20,
@@ -229,4 +311,56 @@ const styles = StyleSheet.create({
     height: 50,
     width: 50,
   },
+  otificationContainer: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  notificationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  notificationTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  notificationList: {
+    paddingVertical: 10,
+  },
+  notificationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  notificationIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationMessage: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  notificationTime: {
+    fontSize: 14,
+    color: '#999',
+  },
+  
 });
+

@@ -4,9 +4,32 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import { ClerkProvider } from '@clerk/clerk-expo';
+import * as SecureStore from 'expo-secure-store';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import CustomSplashScreen from '@/components/CustomSplashScreen';
+
+// This function will help Clerk use secure storage
+const tokenCache = {
+  async getToken(key: string) {
+    try {
+      return SecureStore.getItemAsync(key);
+    } catch (err) {
+      return null;
+    }
+  },
+  async saveToken(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value);
+    } catch (err) {
+      return;
+    }
+  },
+};
+
+// Get Clerk publishable key from environment variables
+const CLERK_PUBLISHABLE_KEY = "pk_test_dXByaWdodC1oYWdmaXNoLTM3LmNsZXJrLmFjY291bnRzLmRldiQ";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -53,11 +76,16 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  // ThemeProvider removed
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-    </Stack>
+    <ClerkProvider 
+      publishableKey={CLERK_PUBLISHABLE_KEY}
+      tokenCache={tokenCache}
+    >
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack>
+    </ClerkProvider>
   );
 }

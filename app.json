@@ -1,37 +1,16 @@
 {
   "expo": {
-    "name": "yumdump",
-    "slug": "yumdump",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F9A11B"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#F9A11B"
-      }
-    },
+    "scheme": "yumdump",
     "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router"
     ],
-    "experiments": {
-      "typedRoutes": true
+    "name": "yumdump",
+    "slug": "yumdump",
+    "extra": {
+      "clerkPublishableKey": "pk_test_dXByaWdodC1oYWdmaXNoLTM3LmNsZXJrLmFjY291bnRzLmRldiQ"
     }
   }
 }
