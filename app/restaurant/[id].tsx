@@ -113,17 +113,13 @@ export default function RestaurantDetailScreen() {
           source={{ uri: restaurant.thumbnail.replace(/\s|`/g, '') }} 
           style={styles.headerImage} 
         />
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
+       
         <View style={styles.restaurantHeaderInfo}>
           <Text style={styles.restaurantName}>{restaurant.name}</Text>
           <Text style={styles.restaurantLocation}>{restaurant.location}</Text>
           <Text style={styles.restaurantPhone}>{restaurant.phone_number}</Text>
         </View>
-        <TouchableOpacity style={styles.directionButton}>
-          <Text style={styles.directionButtonText}>Direction</Text>
-        </TouchableOpacity>
+       
       </View>
 
       {/* Tab navigation */}
