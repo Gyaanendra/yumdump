@@ -17,6 +17,20 @@ const categories = [
   { id: '6', name: 'Mediterranean' },
 ];
 
+interface Notification {
+  id: string;
+  type: string;
+  icon: string;
+  iconColor: string;
+  message: string;
+  time: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
+
 export default function TabOneScreen() {
   const colorScheme = useColorScheme();
   const { user } = useUser();
@@ -26,7 +40,7 @@ export default function TabOneScreen() {
   const [error, setError] = useState<string | null>(null);
   
   // Sample notifications data
-  const notifications = [
+  const notifications: Notification[] = [
     {
       id: '1',
       type: 'review',
@@ -103,7 +117,7 @@ export default function TabOneScreen() {
     </TouchableOpacity>
   );
 
-  const renderNotificationItem = ({ item }) => (
+  const renderNotificationItem = ({ item }: { item: Notification }) => (
     <TouchableOpacity style={styles.notificationItem}>
       <View style={[styles.notificationIconContainer, { backgroundColor: item.iconColor + '20' }]}>
         <Ionicons name={item.icon} size={24} color={item.iconColor} />
@@ -344,7 +358,7 @@ const styles = StyleSheet.create({
     height: 50,
     width: 50,
   },
-  otificationContainer: {
+  notificationContainer: {
     flex: 1,
     backgroundColor: '#ffffff',
   },

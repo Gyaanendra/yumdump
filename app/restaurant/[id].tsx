@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, FlatList, 
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
 import { API_BASE_URL, API_ENDPOINTS } from '@/config/env';
-import { Restaurant } from '@/types/restaurant';
+import { Restaurant, UserReview, VideoLink, MenuItem } from '@/types/restaurant';
 
 export default function RestaurantDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -36,7 +36,7 @@ export default function RestaurantDetailScreen() {
     }
   }, [id]);
 
-  const renderReviewItem = ({ item }) => (
+  const renderReviewItem = ({ item }: { item: UserReview }) => (
     <View style={styles.reviewItem}>
       <View style={styles.reviewHeader}>
         <Text style={styles.reviewUsername}>{item.username}</Text>
@@ -56,7 +56,7 @@ export default function RestaurantDetailScreen() {
     </View>
   );
 
-  const renderVideoItem = ({ item }) => (
+  const renderVideoItem = ({ item }: { item: VideoLink }) => (
     <View style={styles.videoItem}>
       <View style={styles.videoThumbnail}>
         <Ionicons name="play-circle" size={40} color="#fff" style={styles.playIcon} />
@@ -68,7 +68,7 @@ export default function RestaurantDetailScreen() {
     </View>
   );
 
-  const renderMenuItem = ({ item }) => (
+  const renderMenuItem = ({ item }: { item: MenuItem }) => (
     <View style={styles.menuItem}>
       <Image 
         source={{ uri: item.image_link.replace(/\s|`/g, '') }} 

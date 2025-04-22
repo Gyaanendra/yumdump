@@ -5,6 +5,33 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { API_BASE_URL, API_ENDPOINTS } from '@/config/env';
 
+// Define proper types for restaurants and other data
+interface RestaurantMenuItem {
+  name: string;
+  price: string;
+}
+
+interface MapRestaurant {
+  id: string;
+  coordinate: {
+    latitude: number;
+    longitude: number;
+  };
+  title: string;
+  address: string;
+  phone: string;
+  rating: number;
+  image: { uri: string };
+  color: string;
+  description: string;
+  menu: RestaurantMenuItem[];
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
+
 export default function TabTwoScreen() {
   // Delhi coordinates (centered around Connaught Place)
   const [region, setRegion] = useState({
@@ -14,16 +41,16 @@ export default function TabTwoScreen() {
     longitudeDelta: 0.01,
   });
 
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<MapRestaurant | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [restaurants, setRestaurants] = useState([]);
-  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  const [restaurants, setRestaurants] = useState<MapRestaurant[]>([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState<MapRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Categories for filter
-  const categories = [
+  const categories: Category[] = [
     { id: '1', name: 'Italian' },
     { id: '2', name: 'Western' },
     { id: '3', name: 'Javanese' },
@@ -32,56 +59,56 @@ export default function TabTwoScreen() {
 
   // Fetch restaurants data
   useEffect(() => {
-    async function fetchRestaurants() {
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.restaurants}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch restaurants');
-        }
-        const data = await response.json();
-        
-        // Transform API data to match our map requirements
-        const transformedData = data.map(restaurant => ({
-          id: restaurant.restaurant_id.toString(),
-          coordinate: {
-            // For demo purposes, adding slight randomization to coordinates
-            latitude: 28.6304 + (Math.random() - 0.5) * 0.01,
-            longitude: 77.2177 + (Math.random() - 0.5) * 0.01
-          },
-          title: restaurant.name,
-          address: restaurant.location,
-          phone: restaurant.phone_number,
-          rating: restaurant.total_reviews > 0 ? 4.5 : 4.0, // Placeholder rating
-          image: { uri: restaurant.thumbnail.replace(/\s|`/g, '') },
-          color: '#F9A11B',
-          description: restaurant.description,
-          menu: restaurant.order?.menu_items?.map(item => ({
-            name: item.name,
-            price: `₹${item.price}`
-          })) || []
-        }));
-        
-        setRestaurants(transformedData);
-        setFilteredRestaurants(transformedData);
-        setError(null);
-      } catch (err) {
-        setError('Failed to load restaurants');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchRestaurants();
   }, []);
 
-  const handleMarkerPress = (restaurant) => {
+  async function fetchRestaurants() {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.restaurants}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch restaurants');
+      }
+      const data = await response.json();
+      
+      // Transform API data to match our map requirements
+      const transformedData: MapRestaurant[] = data.map((restaurant: any) => ({
+        id: restaurant.restaurant_id.toString(),
+        coordinate: {
+          // For demo purposes, adding slight randomization to coordinates
+          latitude: 28.6304 + (Math.random() - 0.5) * 0.01,
+          longitude: 77.2177 + (Math.random() - 0.5) * 0.01
+        },
+        title: restaurant.name,
+        address: restaurant.location,
+        phone: restaurant.phone_number,
+        rating: restaurant.total_reviews > 0 ? 4.5 : 4.0, // Placeholder rating
+        image: { uri: restaurant.thumbnail.replace(/\s|`/g, '') },
+        color: '#F9A11B',
+        description: restaurant.description,
+        menu: restaurant.order?.menu_items?.map((item: any) => ({
+          name: item.name,
+          price: `₹${item.price}`
+        })) || []
+      }));
+      
+      setRestaurants(transformedData);
+      setFilteredRestaurants(transformedData);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load restaurants');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleMarkerPress = (restaurant: MapRestaurant) => {
     setSelectedRestaurant(restaurant);
     setDetailVisible(true);
   };
 
-  const handleViewDetailPress = (restaurantId) => {
+  const handleViewDetailPress = (restaurantId: string) => {
     setDetailVisible(false);
     router.push(`/restaurant/${restaurantId}`);
   };
@@ -396,6 +423,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 5,
+    color: '#333',
+    marginTop: 15,
   },
   description: {
     fontSize: 16,
@@ -407,6 +436,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
+    color: '#333',
+    marginTop: 20,
   },
   menuItem: {
     flexDirection: 'row',
@@ -414,6 +445,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    alignItems: 'center',
   },
   menuItemName: {
     fontSize: 16,
@@ -427,6 +459,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     padding: 20,
     paddingTop: 0,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
   viewDetailButton: {
     backgroundColor: '#F9A11B',
@@ -454,5 +488,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#F9A11B',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
