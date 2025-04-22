@@ -36,8 +36,10 @@ export default function TabOneScreen() {
   const { user } = useUser();
   const [notificationModalVisible, setNotificationModalVisible] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Sample notifications data
   const notifications: Notification[] = [
@@ -73,6 +75,7 @@ export default function TabOneScreen() {
         setLoading(true);
         const data = await fetchRestaurants();
         setRestaurants(data);
+        setFilteredRestaurants(data); // Initialize filtered restaurants with all restaurants
         setError(null);
       } catch (err) {
         setError('Failed to load restaurants');
@@ -85,8 +88,38 @@ export default function TabOneScreen() {
     loadRestaurants();
   }, []);
 
+  // Add search functionality
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+    if (text.trim() === '') {
+      setFilteredRestaurants(restaurants);
+    } else {
+      const filtered = restaurants.filter(restaurant => 
+        restaurant.name.toLowerCase().includes(text.toLowerCase()) ||
+        restaurant.location.toLowerCase().includes(text.toLowerCase()) ||
+        restaurant.description?.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredRestaurants(filtered);
+    }
+  };
+
+  // Filter by category
+  const handleCategoryPress = (categoryId: string, categoryName: string) => {
+    if (categoryId === 'all') {
+      setFilteredRestaurants(restaurants);
+    } else {
+      const filtered = restaurants.filter(restaurant => 
+        restaurant.cuisine_type?.toLowerCase() === categoryName.toLowerCase()
+      );
+      setFilteredRestaurants(filtered.length > 0 ? filtered : restaurants);
+    }
+  };
+
   const renderCategoryItem = ({ item }) => (
-    <TouchableOpacity style={styles.categoryButton}>
+    <TouchableOpacity 
+      style={styles.categoryButton}
+      onPress={() => handleCategoryPress(item.id, item.name)}
+    >
       <Text style={styles.categoryText}>{item.name}</Text>
     </TouchableOpacity>
   );
@@ -147,7 +180,14 @@ export default function TabOneScreen() {
           style={styles.searchInput}
           placeholder="Search here"
           placeholderTextColor="#999"
+          value={searchQuery}
+          onChangeText={handleSearch}
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => handleSearch('')}>
+            <Ionicons name="close-circle" size={20} color="#999" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <Text style={styles.sectionTitle}>What do you want to eat?</Text>
@@ -180,11 +220,17 @@ export default function TabOneScreen() {
         </View>
       ) : (
         <FlatList
-          data={restaurants}
+          data={filteredRestaurants}
           renderItem={renderRestaurantItem}
           keyExtractor={item => item.restaurant_id.toString()}
           showsVerticalScrollIndicator={false}
           style={styles.restaurantsList}
+          ListEmptyComponent={
+            <View style={styles.emptyResultContainer}>
+              <Ionicons name="search-outline" size={48} color="#F9A11B" />
+              <Text style={styles.emptyResultText}>No restaurants found</Text>
+            </View>
+          }
         />
       )}
 
@@ -204,12 +250,19 @@ export default function TabOneScreen() {
             <View style={{ width: 24 }} />
           </View>
           
-          <FlatList
-            data={notifications}
-            renderItem={renderNotificationItem}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.notificationList}
-          />
+          {loading ? (
+            <View style={styles.modalLoadingContainer}>
+              <ActivityIndicator size="large" color="#F9A11B" />
+              <Text style={styles.loadingText}>Loading notifications...</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={notifications}
+              renderItem={renderNotificationItem}
+              keyExtractor={item => item.id}
+              contentContainerStyle={styles.notificationList}
+            />
+          )}
         </View>
       </Modal>
     </View>
@@ -266,9 +319,12 @@ const styles = StyleSheet.create({
   categoriesList: {
     paddingLeft: 15,
     marginBottom: 15,
+    height: 60, // Add fixed height to ensure proper rendering
+    paddingBottom:15,
   },
   categoriesContentContainer: {
     paddingRight: 15,
+    paddingVertical: 1, // Add padding to prevent cutting
   },
   categoryButton: {
     backgroundColor: '#F9A11B',
@@ -279,9 +335,8 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 50,
-    marginVertical: 5,
-    overflow: 'visible',
+    height: 45, // Slightly reduced height
+    overflow: 'hidden', // Change from 'visible' to 'hidden'
   },
   categoryText: {
     color: 'white',
@@ -293,6 +348,7 @@ const styles = StyleSheet.create({
   },
   restaurantsList: {
     paddingHorizontal: 20,
+    paddingTop: 10,
   },
   restaurantCard: {
     backgroundColor: 'white',
@@ -408,6 +464,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
   },
-  
+  modalLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyResultContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  emptyResultText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
 });
 

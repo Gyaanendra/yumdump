@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity, FlatList, ActivityIndicator, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { API_BASE_URL, API_ENDPOINTS } from '@/config/env';
 import { Restaurant, UserReview, VideoLink, MenuItem } from '@/types/restaurant';
+import { Video } from 'expo-av';
 
 export default function RestaurantDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -11,6 +12,7 @@ export default function RestaurantDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('Description');
+  const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchRestaurantDetails() {
@@ -58,12 +60,38 @@ export default function RestaurantDetailScreen() {
 
   const renderVideoItem = ({ item }: { item: VideoLink }) => (
     <View style={styles.videoItem}>
-      <View style={styles.videoThumbnail}>
-        <Ionicons name="play-circle" size={40} color="#fff" style={styles.playIcon} />
-      </View>
-      <View style={styles.videoInfo}>
-        <Text style={styles.videoTitle}>{item.title}</Text>
-        <Text style={styles.videoSubtitle}>{item.subtitle}</Text>
+      <View style={styles.videoCard}>
+        <TouchableOpacity 
+          style={styles.videoThumbnail}
+          onPress={() => setActiveVideo(item.link)}
+        >
+          {activeVideo === item.link ? (
+            <Video
+              source={{ uri: item.link }}
+              rate={1.0}
+              volume={1.0}
+              isMuted={false}
+              resizeMode="cover"
+              shouldPlay
+              useNativeControls
+              style={styles.videoPlayer}
+            />
+          ) : (
+            <>
+              <Image 
+                source={{ uri: restaurant?.thumbnail.replace(/\s|`/g, '') }} 
+                style={styles.videoThumbnailImage} 
+              />
+              <View style={styles.videoOverlay}>
+                <Ionicons name="play-circle" size={50} color="#fff" style={styles.playIcon} />
+              </View>
+            </>
+          )}
+        </TouchableOpacity>
+        <View style={styles.videoInfo}>
+          <Text style={styles.videoTitle}>{item.title}</Text>
+          <Text style={styles.videoSubtitle}>{item.subtitle}</Text>
+        </View>
       </View>
     </View>
   );
@@ -106,37 +134,48 @@ export default function RestaurantDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header with restaurant image */}
-      <View style={styles.header}>
-        <Image 
-          source={{ uri: restaurant.thumbnail.replace(/\s|`/g, '') }} 
-          style={styles.headerImage} 
-        />
-       
-        <View style={styles.restaurantHeaderInfo}>
-          <Text style={styles.restaurantName}>{restaurant.name}</Text>
-          <Text style={styles.restaurantLocation}>{restaurant.location}</Text>
-          <Text style={styles.restaurantPhone}>{restaurant.phone_number}</Text>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScrollView style={styles.container}>
+        {/* Header with restaurant image */}
+        <View style={styles.header}>
+          <Image 
+            source={{ uri: restaurant.thumbnail.replace(/\s|`/g, '') }} 
+            style={styles.headerImage} 
+          />
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          
+          {/* Overlay gradient for better text visibility */}
+          <View style={styles.headerOverlay} />
+          
+          <View style={styles.restaurantHeaderInfo}>
+            <Text style={styles.restaurantName}>{restaurant.name}</Text>
+            <Text style={styles.restaurantLocation}>{restaurant.location}</Text>
+            <Text style={styles.restaurantPhone}>{restaurant.phone_number}</Text>
+          </View>
         </View>
-       
-      </View>
 
       {/* Tab navigation */}
       <View style={styles.tabContainer}>
-        {['Description', 'Review', 'Video', 'Menu'].map((tab) => (
-          <TouchableOpacity 
-            key={tab} 
+        {['Description', 'Menu', 'Review', 'Video'].map((tab) => (
+          <TouchableOpacity
+            key={tab}
             style={[
-              styles.tabButton, 
-              activeTab === tab && styles.activeTabButton
+              styles.tabButton,
+              activeTab === tab && styles.activeTabButton,
             ]}
             onPress={() => setActiveTab(tab)}
           >
-            <Text style={[
-              styles.tabButtonText,
-              activeTab === tab && styles.activeTabButtonText
-            ]}>{tab}</Text>
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === tab && styles.activeTabButtonText,
+              ]}
+            >
+              {tab}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -145,10 +184,9 @@ export default function RestaurantDetailScreen() {
       <View style={styles.contentContainer}>
         {activeTab === 'Description' && (
           <View style={styles.descriptionContainer}>
-            <Text style={styles.descriptionText}>{restaurant.description}</Text>
-            
-            {/* Gallery */}
+            {/* Gallery - Moved above description */}
             <View style={styles.galleryContainer}>
+              <Text style={styles.galleryTitle}>Photo Gallery</Text>
               <FlatList
                 horizontal
                 data={restaurant.image_links}
@@ -162,6 +200,9 @@ export default function RestaurantDetailScreen() {
                 showsHorizontalScrollIndicator={false}
               />
             </View>
+            
+            <Text style={styles.descriptionTitle}>About</Text>
+            <Text style={styles.descriptionText}>{restaurant.description}</Text>
           </View>
         )}
 
@@ -208,6 +249,7 @@ export default function RestaurantDetailScreen() {
         )}
       </View>
     </ScrollView>
+    </>
   );
 }
 
@@ -252,12 +294,20 @@ const styles = StyleSheet.create({
   },
   header: {
     position: 'relative',
-    height: 200,
+    height: 250, // Increased from 200
   },
   headerImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+  },
+  headerOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent gradient overlay
   },
   backButton: {
     position: 'absolute',
@@ -266,17 +316,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
   },
   restaurantHeaderInfo: {
     position: 'absolute',
     bottom: 20,
     left: 20,
+    right: 20,
+    zIndex: 5,
   },
   restaurantName: {
-    fontSize: 24,
+    fontSize: 28, // Increased from 24
     fontWeight: 'bold',
     color: 'white',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
@@ -284,7 +337,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   restaurantLocation: {
-    fontSize: 14,
+    fontSize: 16, // Increased from 14
     color: 'white',
     marginTop: 4,
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
@@ -292,7 +345,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   restaurantPhone: {
-    fontSize: 14,
+    fontSize: 16, // Increased from 14
     color: 'white',
     marginTop: 2,
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
@@ -347,19 +400,32 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   descriptionText: {
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 24,
     color: '#333',
     marginBottom: 15,
   },
   galleryContainer: {
     marginTop: 10,
+    marginBottom: 20,
+  },
+  galleryTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
   },
   galleryImage: {
-    width: 200,
-    height: 150,
+    width: 280,
+    height: 180,
     borderRadius: 10,
     marginRight: 10,
+  },
+  descriptionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
   },
   reviewsContainer: {
     backgroundColor: 'white',
@@ -415,31 +481,52 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   videoItem: {
-    flexDirection: 'row',
     marginBottom: 15,
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+  },
+  videoCard: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   videoThumbnail: {
-    width: 120,
-    height: 80,
-    backgroundColor: '#ddd',
-    borderRadius: 8,
+    width: '100%',
+    height: 200,
+    position: 'relative',
+  },
+  videoThumbnailImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  videoOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1,
   },
   playIcon: {
-    opacity: 0.8,
+    opacity: 1,
+  },
+  videoPlayer: {
+    width: '100%',
+    height: '100%',
   },
   videoInfo: {
-    flex: 1,
-    marginLeft: 15,
-    justifyContent: 'center',
+    padding: 12,
   },
   videoTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#333',
     marginBottom: 5,
   },

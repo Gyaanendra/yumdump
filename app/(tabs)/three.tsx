@@ -377,77 +377,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   
-  // Keep existing styles
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 30,
-  },
-  profileSection: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  avatarContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#F9A11B',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  avatar: {
-    width: 70,
-    height: 70,
-    tintColor: 'white',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  userType: {
-    fontSize: 16,
-    color: '#F9A11B',
-    marginBottom: 15,
-  },
-  userContact: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 5,
-  },
-  userEmail: {
-    fontSize: 16,
-    color: '#666',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#eee',
-    marginVertical: 20,
-  },
-  optionsContainer: {
-    marginTop: 10,
-  },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderWidth: 1,
-    borderColor: '#eee',
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    marginBottom: 15,
-  },
-  optionIcon: {
-    marginRight: 15,
-  },
-  optionText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-  },
+ 
   // Original modal styles (keeping for reference)
   modalContainer: {
     flex: 1,

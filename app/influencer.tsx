@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { router } from 'expo-router';
 import { useUser } from '@clerk/clerk-expo'; // Import useUser
+import { Stack } from 'expo-router';
 
 export default function InfluencerScreen() {
   const [isEnabled, setIsEnabled] = useState(false);
@@ -14,97 +15,100 @@ export default function InfluencerScreen() {
   const userName = user?.fullName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User'; // Get user name or fallback
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Become an Influencer</Text>
-      </View>
-      
-      <View style={styles.profileSection}>
-        <View style={styles.avatarContainer}>
-          <Image 
-            source={require('@/assets/images/logo.png')} 
-            style={styles.avatar}
-          />
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Become an Influencer</Text>
         </View>
         
-        <Text style={styles.userName}>{userName}</Text> {/* Use the dynamic userName */}
-        <Text style={styles.userType}>Normal User</Text>
-      </View>
-      
-      <View style={styles.infoContainer}>
-        <Text style={styles.sectionTitle}>Influencer Program</Text>
-        <Text style={styles.description}>
-          Join our influencer program to share your food experiences and earn rewards. 
-          As an influencer, you can post reviews, share photos, and help others discover 
-          great food places.
-        </Text>
-        
-        <View style={styles.switchContainer}>
-          <Text style={styles.switchLabel}>Enable Influencer Mode</Text>
-          <Switch
-            trackColor={{ false: "#767577", true: "#F9A11B" }}
-            thumbColor={isEnabled ? "#fff" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={toggleSwitch}
-            value={isEnabled}
-          />
-        </View>
-        
-        {isEnabled && (
-          <View style={styles.influencerForm}>
-            <Text style={styles.formLabel}>Tell us about yourself</Text>
-            <TextInput
-              style={styles.bioInput}
-              placeholder="Write a short bio about your food preferences and experiences..."
-              multiline={true}
-              numberOfLines={4}
-              value={bio}
-              onChangeText={setBio}
+        <View style={styles.profileSection}>
+          <View style={styles.avatarContainer}>
+            <Image 
+              source={require('@/assets/images/logo.png')} 
+              style={styles.avatar}
             />
-            
-            <Text style={styles.formLabel}>Social Media Links (Optional)</Text>
-            <View style={styles.socialInput}>
-              <FontAwesome5 name="instagram" size={20} color="#C13584" style={styles.socialIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Your Instagram username"
-              />
-            </View>
-            
-            <View style={styles.socialInput}>
-              <FontAwesome5 name="twitter" size={20} color="#1DA1F2" style={styles.socialIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Your Twitter username"
-              />
-            </View>
-            
-            <TouchableOpacity style={styles.submitButton}>
-              <Text style={styles.submitButtonText}>Submit Application</Text>
-            </TouchableOpacity>
           </View>
-        )}
+          
+          <Text style={styles.userName}>{userName}</Text>
+          <Text style={styles.userType}>Normal User</Text>
+        </View>
         
-        <View style={styles.benefitsContainer}>
-          <Text style={styles.benefitsTitle}>Benefits</Text>
-          <View style={styles.benefitItem}>
-            <Ionicons name="star" size={20} color="#F9A11B" style={styles.benefitIcon} />
-            <Text style={styles.benefitText}>Earn rewards for popular reviews</Text>
+        <View style={styles.infoContainer}>
+          <Text style={styles.sectionTitle}>Influencer Program</Text>
+          <Text style={styles.description}>
+            Join our influencer program to share your food experiences and earn rewards. 
+            As an influencer, you can post reviews, share photos, and help others discover 
+            great food places.
+          </Text>
+          
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchLabel}>Enable Influencer Mode</Text>
+            <Switch
+              trackColor={{ false: "#767577", true: "#F9A11B" }}
+              thumbColor={isEnabled ? "#fff" : "#f4f3f4"}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={toggleSwitch}
+              value={isEnabled}
+            />
           </View>
-          <View style={styles.benefitItem}>
-            <Ionicons name="restaurant" size={20} color="#F9A11B" style={styles.benefitIcon} />
-            <Text style={styles.benefitText}>Get invited to exclusive food events</Text>
-          </View>
-          <View style={styles.benefitItem}>
-            <Ionicons name="gift" size={20} color="#F9A11B" style={styles.benefitIcon} />
-            <Text style={styles.benefitText}>Receive special offers from restaurants</Text>
+          
+          {isEnabled && (
+            <View style={styles.influencerForm}>
+              <Text style={styles.formLabel}>Tell us about yourself</Text>
+              <TextInput
+                style={styles.bioInput}
+                placeholder="Write a short bio about your food preferences and experiences..."
+                multiline={true}
+                numberOfLines={4}
+                value={bio}
+                onChangeText={setBio}
+              />
+              
+              <Text style={styles.formLabel}>Social Media Links (Optional)</Text>
+              <View style={styles.socialInput}>
+                <FontAwesome5 name="instagram" size={20} color="#C13584" style={styles.socialIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Your Instagram username"
+                />
+              </View>
+              
+              <View style={styles.socialInput}>
+                <FontAwesome5 name="twitter" size={20} color="#1DA1F2" style={styles.socialIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Your Twitter username"
+                />
+              </View>
+              
+              <TouchableOpacity style={styles.submitButton}>
+                <Text style={styles.submitButtonText}>Submit Application</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          
+          <View style={styles.benefitsContainer}>
+            <Text style={styles.benefitsTitle}>Benefits</Text>
+            <View style={styles.benefitItem}>
+              <Ionicons name="star" size={20} color="#F9A11B" style={styles.benefitIcon} />
+              <Text style={styles.benefitText}>Earn rewards for popular reviews</Text>
+            </View>
+            <View style={styles.benefitItem}>
+              <Ionicons name="restaurant" size={20} color="#F9A11B" style={styles.benefitIcon} />
+              <Text style={styles.benefitText}>Get invited to exclusive food events</Text>
+            </View>
+            <View style={styles.benefitItem}>
+              <Ionicons name="gift" size={20} color="#F9A11B" style={styles.benefitIcon} />
+              <Text style={styles.benefitText}>Receive special offers from restaurants</Text>
+            </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 

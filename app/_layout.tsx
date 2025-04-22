@@ -9,6 +9,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import CustomSplashScreen from '@/components/CustomSplashScreen';
+import '../global.css';
 
 // This function will help Clerk use secure storage
 const tokenCache = {

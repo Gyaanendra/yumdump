@@ -72,25 +72,30 @@ export default function TabTwoScreen() {
       const data = await response.json();
       
       // Transform API data to match our map requirements
-      const transformedData: MapRestaurant[] = data.map((restaurant: any) => ({
-        id: restaurant.restaurant_id.toString(),
-        coordinate: {
-          // For demo purposes, adding slight randomization to coordinates
-          latitude: 28.6304 + (Math.random() - 0.5) * 0.01,
-          longitude: 77.2177 + (Math.random() - 0.5) * 0.01
-        },
-        title: restaurant.name,
-        address: restaurant.location,
-        phone: restaurant.phone_number,
-        rating: restaurant.total_reviews > 0 ? 4.5 : 4.0, // Placeholder rating
-        image: { uri: restaurant.thumbnail.replace(/\s|`/g, '') },
-        color: '#F9A11B',
-        description: restaurant.description,
-        menu: restaurant.order?.menu_items?.map((item: any) => ({
-          name: item.name,
-          price: `₹${item.price}`
-        })) || []
-      }));
+      const transformedData: MapRestaurant[] = data.map((restaurant: any) => {
+        // Check if properties exist before accessing them
+        return {
+          id: restaurant.restaurant_id?.toString() || '',
+          coordinate: {
+            // For demo purposes, adding slight randomization to coordinates
+            latitude: 28.6304 + (Math.random() - 0.5) * 0.01,
+            longitude: 77.2177 + (Math.random() - 0.5) * 0.01
+          },
+          title: restaurant.name || 'Unknown Restaurant',
+          address: restaurant.location || 'No address available',
+          phone: restaurant.phone_number || 'No phone available',
+          rating: restaurant.total_reviews > 0 ? 4.5 : 4.0, // Placeholder rating
+          image: { uri: (restaurant.thumbnail || '').replace(/\s|`/g, '') },
+          color: '#F9A11B',
+          description: restaurant.description || 'No description available',
+          menu: Array.isArray(restaurant.order?.menu_items) 
+            ? restaurant.order.menu_items.map((item: any) => ({
+                name: item.name || 'Unknown item',
+                price: `₹${item.price || 0}`
+              })) 
+            : []
+        };
+      });
       
       setRestaurants(transformedData);
       setFilteredRestaurants(transformedData);
@@ -126,7 +131,12 @@ export default function TabTwoScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.restaurantDetailCard}>
             <ScrollView>
-              <Image source={selectedRestaurant.image} style={styles.restaurantImage} />
+              {/* Add error handling for image loading */}
+              <Image 
+                source={selectedRestaurant.image} 
+                style={styles.restaurantImage}
+                onError={(e) => console.log('Image loading error:', e.nativeEvent.error)}
+              />
               
               <View style={styles.restaurantInfo}>
                 <Text style={styles.restaurantName}>{selectedRestaurant.title}</Text>
